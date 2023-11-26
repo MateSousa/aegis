@@ -15,4 +15,8 @@ func Setup(wr *gorm.DB) {
 	if err != nil {
 		logrus.Error("Error on Auto migrate WRITE", err)
 	}
+
+	if err := wr.FirstOrCreate(&entity.Role{Name: "admin"}, &entity.Role{Name: "member"}).Error; err != nil {
+		logrus.Error("Error on create admin role", err)
+	}
 }

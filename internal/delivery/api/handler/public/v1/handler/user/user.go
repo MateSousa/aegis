@@ -4,18 +4,24 @@ import (
 	"net/http"
 
 	"github.com/MateSousa/aegis/internal/domain/entity"
+	roleUseCase "github.com/MateSousa/aegis/internal/usecase/role"
+	roleMappingUseCase "github.com/MateSousa/aegis/internal/usecase/rolemapping"
 	userUseCase "github.com/MateSousa/aegis/internal/usecase/user"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
 
 type UserHandler struct {
-	UserUseCase userUseCase.IUserUsecase
+	UserUseCase        userUseCase.IUserUsecase
+	RoleMappingUseCase roleMappingUseCase.IRoleMappingUsecase
+	RoleUseCase        roleUseCase.IRoleUsecase
 }
 
-func NewUserHandler(userUseCase userUseCase.IUserUsecase) *UserHandler {
+func NewUserHandler(userUseCase userUseCase.IUserUsecase, roleMappingUseCase roleMappingUseCase.IRoleMappingUsecase, roleUseCase roleUseCase.IRoleUsecase) *UserHandler {
 	return &UserHandler{
 		userUseCase,
+		roleMappingUseCase,
+		roleUseCase,
 	}
 }
 
@@ -61,6 +67,24 @@ func (h *UserHandler) CreateUser() echo.HandlerFunc {
 		if err != nil {
 			return err
 		}
+
+		role := new(entity.Role)
+		role, err = h.RoleUseCase.GetRoleByName("admin")
+		if err != nil {
+			return err
+		}
+
+		roleMapping := new(entity.RoleMapping)
+		roleMapping = &entity.RoleMapping{
+			UserID: user.ID,
+			RoleID: role.ID,
+		}
+
+		_, err = h.RoleMappingUseCase.CreateRoleMapping(roleMapping)
+		if err != nil {
+			return err
+		}
+
 		return c.JSON(http.StatusOK, user)
 	}
 }

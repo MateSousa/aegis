@@ -1,4 +1,4 @@
-package usecase
+package user
 
 import (
 	"github.com/MateSousa/aegis/internal/domain/entity"
