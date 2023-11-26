@@ -12,4 +12,5 @@ type IUserRepository interface {
 	UpdateUser(user *entity.User) (*entity.User, error)
 	DeleteUser(id uuid.UUID) error
 	GetUsers() ([]*entity.User, error)
+	EmailExists(email string) (bool, error)
 }

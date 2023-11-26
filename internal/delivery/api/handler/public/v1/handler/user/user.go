@@ -1,15 +1,21 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/MateSousa/aegis/internal/domain/entity"
 	roleUseCase "github.com/MateSousa/aegis/internal/usecase/role"
 	roleMappingUseCase "github.com/MateSousa/aegis/internal/usecase/rolemapping"
 	userUseCase "github.com/MateSousa/aegis/internal/usecase/user"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 )
+
+type CustomValidator struct {
+	validator *validator.Validate
+}
 
 type UserHandler struct {
 	UserUseCase        userUseCase.IUserUsecase
@@ -31,6 +37,10 @@ func (h *UserHandler) InitRoutes(e *echo.Group) {
 	e.POST("/users", h.CreateUser())
 	e.PUT("/users", h.UpdateUser())
 	e.DELETE("/users/:id", h.DeleteUser())
+}
+
+func (cv *CustomValidator) Validate(i interface{}) error {
+	return cv.validator.Struct(i)
 }
 
 func (h *UserHandler) GetUsers() echo.HandlerFunc {
@@ -63,14 +73,23 @@ func (h *UserHandler) CreateUser() echo.HandlerFunc {
 		if err := c.Bind(user); err != nil {
 			return err
 		}
+
+		if err := c.Validate(user); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+
 		user, err := h.UserUseCase.CreateUser(user)
 		if err != nil {
+			if err == entity.ErrEmailExists {
+				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			}
 			return err
 		}
 
 		role := new(entity.Role)
 		role, err = h.RoleUseCase.GetRoleByName("admin")
 		if err != nil {
+			fmt.Println("Error getting role by name")
 			return err
 		}
 
@@ -95,6 +114,11 @@ func (h *UserHandler) UpdateUser() echo.HandlerFunc {
 		if err := c.Bind(user); err != nil {
 			return err
 		}
+
+		if err := c.Validate(user); err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+
 		user, err := h.UserUseCase.UpdateUser(user)
 		if err != nil {
 			return err

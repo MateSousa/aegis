@@ -60,3 +60,11 @@ func (r *UserRepository) GetUsers() ([]*entity.User, error) {
 	}
 	return users, nil
 }
+
+func (r *UserRepository) EmailExists(email string) (bool, error) {
+	var count int64
+	if err := r.db.Model(&entity.User{}).Where("email = ?", email).Count(&count).Error; err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}

@@ -4,6 +4,7 @@ import (
 	"github.com/MateSousa/aegis/internal/domain/entity"
 	"github.com/MateSousa/aegis/internal/repository/user"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type IUserUsecase interface {
@@ -26,6 +27,16 @@ func NewUserUsecase(userRepo user.IUserRepository) IUserUsecase {
 }
 
 func (u *userUseCase) CreateUser(user *entity.User) (*entity.User, error) {
+	if exists, _ := u.userRepo.EmailExists(user.Email); exists {
+		return nil, entity.ErrEmailExists
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+	user.Password = string(hash)
+
 	return u.userRepo.CreateUser(user)
 }
 

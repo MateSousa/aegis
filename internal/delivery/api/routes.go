@@ -12,12 +12,23 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/MateSousa/aegis/internal/driver/http"
+	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 )
+
+type CustomValidator struct {
+	validator *validator.Validate
+}
+
+func (cv *CustomValidator) Validate(i interface{}) error {
+	return cv.validator.Struct(i)
+}
 
 func InitRoutes(connection *gorm.DB) {
 	logrus.Info("Initializing Api...")
 	httpServer := http.New()
+
+	httpServer.Router.Validator = &CustomValidator{validator: validator.New()}
 
 	// Use httpServer.Router to define your routes
 	privateV1Group := httpServer.Router.Group("/api/v1")
