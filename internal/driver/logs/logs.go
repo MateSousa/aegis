@@ -9,7 +9,6 @@ import (
 	"github.com/elvenworks/prohermes"
 	"github.com/sirupsen/logrus"
 	"github.com/zput/zxcTool/ztLog/zt_formatter"
-	"go.elastic.co/apm/module/apmlogrus/v2"
 )
 
 func Init() {
@@ -25,7 +24,6 @@ func InitLogrus() {
 	}
 
 	l := logrus.WithFields(logrus.Fields{})
-	l.Logger.AddHook(&apmlogrus.Hook{})
 
 	promermes := prohermes.MustNewPrometheusHook()
 

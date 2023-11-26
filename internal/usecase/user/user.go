@@ -2,7 +2,7 @@ package usecase
 
 import (
 	"github.com/MateSousa/aegis/internal/domain/entity"
-	"github.com/MateSousa/aegis/internal/domain/repository/user"
+	"github.com/MateSousa/aegis/internal/repository/user"
 	"github.com/google/uuid"
 )
 

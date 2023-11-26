@@ -6,8 +6,8 @@ import (
 	"gorm.io/gorm"
 )
 
-func InitRoutes(e *echo.Group, connections map[string]*gorm.DB) {
-	health := handler.InitHealthHandler(connections)
+func InitRoutes(e *echo.Group, connection *gorm.DB) {
+	health := handler.InitHealthHandler(connection)
 
 	health.InitRoutes(e)
 }

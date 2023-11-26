@@ -11,32 +11,30 @@ import (
 )
 
 type HealthHandler struct {
-	HealthDBConnections map[string]*gorm.DB
+	HealthDBConnections *gorm.DB
 }
 
 func (c HealthHandler) InitRoutes(e *echo.Group) {
 	e.GET("/healthz", c.Live)
 }
 
-func (c HealthHandler) Live(ctx echo.Context) {
-	for connectionName, connection := range c.HealthDBConnections {
-		healthRepositorys := health.NewRepository(connection)
-		if err := healthRepositorys.Check(); err != nil {
-			logrus.Error("Error on health check for connection: ", connectionName, err)
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, fmt.Sprintf("Error on health check for connection: %s", connectionName))
-		}
-		return
+func (c HealthHandler) Live(ctx echo.Context) error {
+	healthRepositorys := health.NewHealthRepository(c.HealthDBConnections)
+	if err := healthRepositorys.GetHealthDB(ctx.Request().Context()); err != nil {
+		logrus.Error("Error on health check for connection: ", err)
+		ctx.JSON(http.StatusInternalServerError, fmt.Sprintf("Error on health check for connection: %s", err))
 	}
+	return nil
 
 	return ctx.JSON(http.StatusOK, "API is live")
 }
 
-func NewHealthHandler(connections map[string]*gorm.DB) *HealthHandler {
+func NewHealthHandler(connection *gorm.DB) *HealthHandler {
 	return &HealthHandler{
-		HealthDBConnections: connections,
+		HealthDBConnections: connection,
 	}
 }
 
-func InitHealthHandler(connections map[string]*gorm.DB) *HealthHandler {
-	return NewHealthHandler(connections)
+func InitHealthHandler(connection *gorm.DB) *HealthHandler {
+	return NewHealthHandler(connection)
 }

@@ -2,11 +2,9 @@ package api
 
 import (
 	"os"
-	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-	"github.com/swaggo/echo-swagger"
+	echoSwagger "github.com/swaggo/echo-swagger"
 
 	"github.com/MateSousa/aegis/docs"
 	privateV1 "github.com/MateSousa/aegis/internal/delivery/api/handler/private/v1"
@@ -15,43 +13,27 @@ import (
 
 	"github.com/MateSousa/aegis/internal/driver/http"
 	"github.com/sirupsen/logrus"
-
-	"github.com/MateSousa/aegis/internal/driver/logs"
 )
 
-func InitRoutes(connections map[string]*gorm.DB) {
+func InitRoutes(connection *gorm.DB) {
 	logrus.Info("Initializing Api...")
+	httpServer := http.New()
 
-	e := echo.New()
+	// Use httpServer.Router to define your routes
+	privateV1Group := httpServer.Router.Group("/api/v1")
+	privateV1.InitRoutes(privateV1Group, connection)
 
-	InitSwagger(e)
+	publicV1Group := httpServer.Router.Group("/api/v1")
+	publicV1.InitRoutes(publicV1Group, connection)
 
-	// Middleware
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
+	// Initialize Swagger
+	InitSwagger(httpServer.Router)
 
-	// Skip paths logic needs to be integrated into the logger middleware if required
-
-	// Initialize Prometheus
-	p := middleware.NewPrometheus("echo")
-	p.Use(e)
-
-	// Initialize Routes
-	PrivateV1Group := e.Group("/api/private/v1")
-	privateV1.InitRoutes(PrivateV1Group, connections)
-
-	PublicV1 := e.Group("/api/public/v1")
-	publicV1.InitRoutes(PublicV1)
-
-	// Start server
-	go func() {
-		if err := e.Start(":8080"); err != nil && err != http.ErrServerClosed {
-			e.Logger.Fatal("shutting down the server")
-		}
-	}()
+	go httpServer.Run()
 }
 
 func InitSwagger(e *echo.Echo) {
+	// Swagger configuration
 	docs.SwaggerInfo.Title = os.Getenv("SWAGGER_TITLE")
 	docs.SwaggerInfo.Description = "This document provides the documentation for a REST API designed."
 	docs.SwaggerInfo.Version = "1.0"
@@ -60,4 +42,3 @@ func InitSwagger(e *echo.Echo) {
 	docs.SwaggerInfo.BasePath = os.Getenv("SWAGGER_BASEPATH")
 	e.GET("/docs/*", echoSwagger.WrapHandler)
 }
-

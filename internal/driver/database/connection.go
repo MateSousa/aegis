@@ -4,10 +4,12 @@ import (
 	"os"
 
 	"github.com/sirupsen/logrus"
-	postgres "go.elastic.co/apm/module/apmgormv2/driver/postgres"
+	postgres "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
+
+const ConnectionDefault = "default"
 
 func New(connection string) *gorm.DB {
 	db, err := gorm.Open(postgres.Open(connection), &gorm.Config{

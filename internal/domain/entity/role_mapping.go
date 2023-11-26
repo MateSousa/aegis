@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"github.com/MateSousa/internal/domain/common"
+	"github.com/MateSousa/aegis/internal/domain/common"
 	"github.com/google/uuid"
 )
 

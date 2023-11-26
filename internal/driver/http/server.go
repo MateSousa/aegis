@@ -7,10 +7,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
-	"go.elastic.co/apm/module/apmgin/v2"
-	"go.elastic.co/apm/module/apmlogrus/v2"
 )
 
 const (
@@ -18,8 +17,8 @@ const (
 )
 
 type HTTP struct {
-	Router   *gin.Engine
-	Listener *net.Listener
+	Router   *echo.Echo
+	Listener net.Listener
 	Server   *http.Server
 	Log      *logrus.Entry
 }
@@ -27,8 +26,8 @@ type HTTP struct {
 func (c *HTTP) Run() {
 	c.Log.Trace("Listen on ", os.Getenv("HTTP_ADDR"))
 
-	if err := c.Server.Serve(*c.Listener); err != nil && err != http.ErrServerClosed {
-		c.Log.Fatal("Server closed unexpect")
+	if err := c.Server.Serve(c.Listener); err != nil && err != http.ErrServerClosed {
+		c.Log.Fatal("Server closed unexpectedly: ", err)
 	}
 }
 
@@ -43,23 +42,21 @@ func (c *HTTP) Close() {
 
 func New() *HTTP {
 	log := logrus.WithFields(logrus.Fields{"module": "http"})
-	log.Logger.AddHook(&apmlogrus.Hook{})
 
 	listener, err := net.Listen("tcp", os.Getenv("HTTP_ADDR"))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	gin.SetMode(os.Getenv("GIN_MODE"))
-	router := gin.New()
-	router.Use(gin.Recovery())
-	router.Use(apmgin.Middleware(router))
+	e := echo.New()
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
 
 	return &HTTP{
-		Router:   router,
-		Listener: &listener,
+		Router:   e,
+		Listener: listener,
 		Server: &http.Server{
-			Handler:           router,
+			Handler:           e,
 			ReadHeaderTimeout: 5 * time.Second,
 		},
 		Log: log,

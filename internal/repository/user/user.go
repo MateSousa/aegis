@@ -2,7 +2,6 @@ package user
 
 import (
 	"github.com/MateSousa/aegis/internal/domain/entity"
-	database "github.com/MateSousa/aegis/internal/drive/database/connection"
 	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
@@ -11,9 +10,9 @@ type UserRepository struct {
 	db *gorm.DB
 }
 
-func NewUserRepository(connections map[string]*gorm.DB) *UserRepository {
+func NewUserRepository(connection *gorm.DB) *UserRepository {
 	return &UserRepository{
-		db: connections[database.ConnectionDefault],
+		db: connection,
 	}
 }
 

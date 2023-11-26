@@ -19,7 +19,7 @@ func NewUserHandler(userUseCase userUseCase.IUserUsecase) *UserHandler {
 	}
 }
 
-func (h *UserHandler) RegisterRoutes(e *echo.Echo) {
+func (h *UserHandler) InitRoutes(e *echo.Group) {
 	e.GET("/users", h.GetUsers())
 	e.GET("/users/:id", h.GetUserByID())
 	e.POST("/users", h.CreateUser())
