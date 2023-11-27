@@ -7,6 +7,7 @@ import (
 
 type RoleMapping struct {
 	common.Model
-	UserID uuid.UUID `json:"user_id"`
-	RoleID uuid.UUID `json:"role_id"`
+	UserID   uuid.UUID `json:"user_id"`
+	RoleID   uuid.UUID `json:"role_id"`
+	TenantID uuid.UUID `json:"tenant_id"`
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/time/rate"
 )
 
 const (
@@ -49,6 +50,9 @@ func New() *HTTP {
 	}
 
 	e := echo.New()
+
+	e.Use(RateLimiter(rate.Limit(1), 5))
+	e.Use(middleware.CORS())
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
@@ -60,5 +64,18 @@ func New() *HTTP {
 			ReadHeaderTimeout: 5 * time.Second,
 		},
 		Log: log,
+	}
+}
+
+func RateLimiter(r rate.Limit, b int) echo.MiddlewareFunc {
+	limiter := rate.NewLimiter(r, b)
+
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			if !limiter.Allow() {
+				return echo.NewHTTPError(http.StatusTooManyRequests, "Rate limit exceeded")
+			}
+			return next(c)
+		}
 	}
 }

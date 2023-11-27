@@ -30,21 +30,18 @@ func InitRoutes(connection *gorm.DB) {
 
 	httpServer.Router.Validator = &CustomValidator{validator: validator.New()}
 
-	// Use httpServer.Router to define your routes
 	privateV1Group := httpServer.Router.Group("/api/v1")
 	privateV1.InitRoutes(privateV1Group, connection)
 
 	publicV1Group := httpServer.Router.Group("/api/v1")
 	publicV1.InitRoutes(publicV1Group, connection)
 
-	// Initialize Swagger
 	InitSwagger(httpServer.Router)
 
 	go httpServer.Run()
 }
 
 func InitSwagger(e *echo.Echo) {
-	// Swagger configuration
 	docs.SwaggerInfo.Title = os.Getenv("SWAGGER_TITLE")
 	docs.SwaggerInfo.Description = "This document provides the documentation for a REST API designed."
 	docs.SwaggerInfo.Version = "1.0"

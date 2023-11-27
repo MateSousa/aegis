@@ -11,6 +11,7 @@ func Setup(wr *gorm.DB) {
 		&entity.User{},
 		&entity.Role{},
 		&entity.RoleMapping{},
+		&entity.Tenant{},
 	)
 	if err != nil {
 		logrus.Error("Error on Auto migrate WRITE", err)

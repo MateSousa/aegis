@@ -7,6 +7,7 @@ import (
 	"github.com/MateSousa/aegis/internal/domain/entity"
 	roleUseCase "github.com/MateSousa/aegis/internal/usecase/role"
 	roleMappingUseCase "github.com/MateSousa/aegis/internal/usecase/rolemapping"
+	tenantUseCase "github.com/MateSousa/aegis/internal/usecase/tenant"
 	userUseCase "github.com/MateSousa/aegis/internal/usecase/user"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
@@ -21,13 +22,15 @@ type UserHandler struct {
 	UserUseCase        userUseCase.IUserUsecase
 	RoleMappingUseCase roleMappingUseCase.IRoleMappingUsecase
 	RoleUseCase        roleUseCase.IRoleUsecase
+	TenantUseCase      tenantUseCase.ITenantUsecase
 }
 
-func NewUserHandler(userUseCase userUseCase.IUserUsecase, roleMappingUseCase roleMappingUseCase.IRoleMappingUsecase, roleUseCase roleUseCase.IRoleUsecase) *UserHandler {
+func NewUserHandler(userUseCase userUseCase.IUserUsecase, roleMappingUseCase roleMappingUseCase.IRoleMappingUsecase, roleUseCase roleUseCase.IRoleUsecase, tenantUseCase tenantUseCase.ITenantUsecase) *UserHandler {
 	return &UserHandler{
 		userUseCase,
 		roleMappingUseCase,
 		roleUseCase,
+		tenantUseCase,
 	}
 }
 
@@ -84,6 +87,13 @@ func (h *UserHandler) CreateUser() echo.HandlerFunc {
 				return echo.NewHTTPError(http.StatusBadRequest, err.Error())
 			}
 			return err
+		}
+
+		tenant := new(entity.Tenant)
+		tenant.UserId = user.ID
+		err = h.TenantUseCase.Create(tenant)
+		if err != nil {
+			fmt.Println("Error creating tenant")
 		}
 
 		role := new(entity.Role)
