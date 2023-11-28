@@ -12,4 +12,5 @@ type ITenantRepository interface {
 	FindById(id uuid.UUID) (*entity.Tenant, error)
 	FindAll() ([]*entity.Tenant, error)
 	FindByUserId(userId uuid.UUID) ([]*entity.Tenant, error)
+	FindByClientId(clientId uuid.UUID) (*entity.Tenant, error)
 }

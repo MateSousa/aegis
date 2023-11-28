@@ -1,6 +1,7 @@
 package tenant
 
 import (
+	"encoding/base64"
 	"math/rand"
 
 	"github.com/MateSousa/aegis/internal/domain/entity"
@@ -15,6 +16,7 @@ type ITenantUsecase interface {
 	FindById(id uuid.UUID) (*entity.Tenant, error)
 	FindAll() ([]*entity.Tenant, error)
 	FindByUserId(userId uuid.UUID) ([]*entity.Tenant, error)
+	FindByClientId(clientId uuid.UUID) (*entity.Tenant, error)
 }
 
 type TenantUsecase struct {
@@ -28,11 +30,18 @@ func NewTenantUsecase(tenantRepository tenant.ITenantRepository) ITenantUsecase 
 }
 
 func (u *TenantUsecase) Create(tenant *entity.Tenant) error {
-	isFirstTenant := IsFirstTenantForUser(u, tenant.UserId)
+	isFirstTenant := IsFirstTenantForUser(u, tenant.OwnerId)
 	if isFirstTenant {
 		tenant.Name = GenerateRandomTenantName()
 	}
-	return u.tenantRepository.Create(tenant)
+	tenant.ClientId = u.GenerateRandomClientId()
+	tenant.ClientSecret = u.Base64Encode(u.GenerateRandomClientSecret())
+
+	err := u.tenantRepository.Create(tenant)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (u *TenantUsecase) Update(tenant *entity.Tenant) error {
@@ -64,18 +73,30 @@ func IsFirstTenantForUser(tenantUsecase ITenantUsecase, userId uuid.UUID) bool {
 }
 
 func GenerateRandomTenantName() string {
-	// generate a random string with max length of 8
-	// https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-go
 	return "development-" + randStringBytes(8)
 }
 
 func randStringBytes(n int) string {
-	// generate a random string with max length of 8
-	// https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-go
 	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	b := make([]byte, n)
 	for i := range b {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
 	return string(b)
+}
+
+func (u *TenantUsecase) GenerateRandomClientId() uuid.UUID {
+	return uuid.New()
+}
+
+func (u *TenantUsecase) GenerateRandomClientSecret() string {
+	return randStringBytes(32)
+}
+
+func (u *TenantUsecase) Base64Encode(secret string) string {
+	return base64.StdEncoding.EncodeToString([]byte(secret))
+}
+
+func (u *TenantUsecase) FindByClientId(clientId uuid.UUID) (*entity.Tenant, error) {
+	return u.tenantRepository.FindByClientId(clientId)
 }

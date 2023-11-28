@@ -5,9 +5,10 @@ import (
 	"github.com/google/uuid"
 )
 
-type RoleMapping struct {
+type Customer struct {
 	common.Model
 	UserID   uuid.UUID `gorm:"type:uuid;not null" json:"user_id"`
-	RoleID   uuid.UUID `gorm:"type:uuid;not null" json:"role_id"`
+	User     User      `gorm:"foreignKey:UserID" json:"user"`
 	TenantID uuid.UUID `gorm:"type:uuid;not null" json:"tenant_id"`
+	Tenant   Tenant    `gorm:"foreignKey:TenantID" json:"tenant"`
 }

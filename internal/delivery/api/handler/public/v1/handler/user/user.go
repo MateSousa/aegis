@@ -90,7 +90,7 @@ func (h *UserHandler) CreateUser() echo.HandlerFunc {
 		}
 
 		tenant := new(entity.Tenant)
-		tenant.UserId = user.ID
+		tenant.OwnerId = user.ID
 		err = h.TenantUseCase.Create(tenant)
 		if err != nil {
 			fmt.Println("Error creating tenant")
@@ -105,8 +105,9 @@ func (h *UserHandler) CreateUser() echo.HandlerFunc {
 
 		roleMapping := new(entity.RoleMapping)
 		roleMapping = &entity.RoleMapping{
-			UserID: user.ID,
-			RoleID: role.ID,
+			UserID:   user.ID,
+			RoleID:   role.ID,
+			TenantID: tenant.ID,
 		}
 
 		_, err = h.RoleMappingUseCase.CreateRoleMapping(roleMapping)

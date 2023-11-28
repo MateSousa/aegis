@@ -7,17 +7,26 @@ import (
 )
 
 func Setup(wr *gorm.DB) {
+	if err := wr.Exec("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";").Error; err != nil {
+		logrus.Error("Error on CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";", err)
+	}
+
 	err := wr.AutoMigrate(
 		&entity.User{},
 		&entity.Role{},
 		&entity.RoleMapping{},
 		&entity.Tenant{},
+		&entity.Customer{},
 	)
 	if err != nil {
 		logrus.Error("Error on Auto migrate WRITE", err)
 	}
 
-	if err := wr.FirstOrCreate(&entity.Role{Name: "admin"}, &entity.Role{Name: "member"}).Error; err != nil {
-		logrus.Error("Error on create admin role", err)
+	roleNames := []string{"admin", "member", "user", "customer"}
+	for _, roleName := range roleNames {
+		var role entity.Role
+		if err := wr.Where("name = ?", roleName).First(&role).Error; err != nil {
+			wr.Create(&entity.Role{Name: roleName})
+		}
 	}
 }

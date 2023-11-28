@@ -7,7 +7,9 @@ import (
 
 type Tenant struct {
 	common.Model
-	Name   string    `json:"name" validate:"required,alphanum,min=3,max=255"`
-	UserId uuid.UUID `json:"user_id" validate:"required"`
-	User   User      `json:"user"`
+	Name         string    `json:"name" validate:"required,alphanum,min=3,max=255"`
+	ClientId     uuid.UUID `gorm:"type:uuid;not null;uniqueIndex" json:"client_id"`
+	ClientSecret string    `gorm:"not null;uniqueIndex" json:"client_secret"`
+	OwnerId      uuid.UUID `gorm:"type:uuid;not null" json:"owner_id"`
+	Owner        User      `gorm:"foreignKey:OwnerId" json:"owner"`
 }

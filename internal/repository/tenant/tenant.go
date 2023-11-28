@@ -28,7 +28,7 @@ func (r *TenantRepository) Delete(id uuid.UUID) error {
 
 func (r *TenantRepository) FindById(id uuid.UUID) (*entity.Tenant, error) {
 	tenant := &entity.Tenant{}
-	err := r.db.Preload("User").First(tenant, id).Error
+	err := r.db.Preload("Owner").First(tenant, id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (r *TenantRepository) FindById(id uuid.UUID) (*entity.Tenant, error) {
 
 func (r *TenantRepository) FindAll() ([]*entity.Tenant, error) {
 	tenants := []*entity.Tenant{}
-	err := r.db.Preload("User").Find(&tenants).Error
+	err := r.db.Preload("Owner").Find(&tenants).Error
 	if err != nil {
 		return nil, err
 	}
@@ -46,9 +46,18 @@ func (r *TenantRepository) FindAll() ([]*entity.Tenant, error) {
 
 func (r *TenantRepository) FindByUserId(userId uuid.UUID) ([]*entity.Tenant, error) {
 	tenants := []*entity.Tenant{}
-	err := r.db.Preload("User").Where("user_id = ?", userId).Find(&tenants).Error
+	err := r.db.Preload("Owner").Where("user_id = ?", userId).Find(&tenants).Error
 	if err != nil {
 		return nil, err
 	}
 	return tenants, nil
+}
+
+func (r *TenantRepository) FindByClientId(clientId uuid.UUID) (*entity.Tenant, error) {
+	tenant := &entity.Tenant{}
+	err := r.db.Preload("Owner").Where("client_id = ?", clientId).First(tenant).Error
+	if err != nil {
+		return nil, err
+	}
+	return tenant, nil
 }
